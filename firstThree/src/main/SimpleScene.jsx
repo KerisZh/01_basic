@@ -60,8 +60,7 @@ export default class SimpleScene extends Component {
 
     render() {
         return (
-            <div id="stage">
-            </div>
+            <div id="stage" />
         )
     }
 }
