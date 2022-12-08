@@ -3,21 +3,14 @@ import * as THREE from 'three'
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'
 // import gsap from 'gsap'
 import * as dat from 'dat.gui'
-import { AmbientLight, BoxGeometry, Color, Mesh, MeshLambertMaterial, SpotLight, Vector2 } from 'three'
+import { AmbientLight, BoxGeometry, Mesh, SpotLight, Vector2 } from 'three'
 // import { Stats } from 'stats'
 
 export default function Camera() {
 
   const scene = new THREE.Scene()
-  // const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 1, 1000)// 透视摄像机
-  // 左 右 上 下 边界 近端距离 远端距离
-  const camera = new THREE.OrthographicCamera(
-    window.innerWidth / - 12,
-    window.innerWidth / 12,
-    window.innerHeight / 12,
-    window.innerHeight / - 12,
-    1,
-    1000)// 正交摄像机
+  const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 1, 1000)// 透视摄像机
+  // const Ocamera = new THREE.OrthographicCamera(window.innerWidth / - 2, window.innerWidth / 2, window.innerHeight / 2, window.innerHeight / - 2, 1, 1000)// 正交摄像机
   const render = new THREE.WebGLRenderer() // 初始化渲染器
   render.setSize(window.innerWidth, window.innerHeight)
   render.shadowMap.enabled = true
@@ -25,6 +18,31 @@ export default function Camera() {
   const axes = new THREE.AxesHelper(50);
   // axes.setColors(0x00ffff, 0xffff00, 0x00ff00)
   scene.add(axes)
+
+  var geometry = new THREE.BoxGeometry(8, 8, 8);
+  const material = new THREE.MeshLambertMaterial({ color: 0xff2288 })
+  const cube = new THREE.Mesh(geometry, material)
+  scene.add(cube)
+
+  cube.castShadow = true
+  cube.position.x = 4
+  cube.position.y = 10
+  cube.position.z = 20
+
+  const geometry2 = new BoxGeometry(4,4,4)
+  const material2 = new THREE.MeshLambertMaterial({color:0x00ff00})
+  const cube2 = new Mesh(geometry2, material2)
+  cube2.castShadow = true
+
+  cube2.position.x = -10
+  cube2.position.y = 10
+  cube2.position.z = 0
+  cube2.name = 'cube2'
+  scene.add(cube2)
+  // console.log(scene.children.length);
+  
+  console.log(scene.getObjectByName('cube2', false));
+
 
   const planeGeometry = new THREE.PlaneGeometry(100, 100)
   const planeMaterial = new THREE.MeshLambertMaterial({ color: 0xcccccc })
@@ -41,6 +59,9 @@ export default function Camera() {
   camera.position.z = 35
   camera.lookAt(scene.position)
 
+  // cube.rotation.x += 0.8
+  // cube.rotation.y += 0.8
+
   const spotLight = new SpotLight(0xffffff)
   spotLight.position.set(-60, 40, -65)
   spotLight.castShadow = true // 产生阴影
@@ -53,32 +74,15 @@ export default function Camera() {
   const ambientLight = new AmbientLight(0xaaaaaa)//地板的lamber材质需要此光源才能展示
   scene.add(ambientLight)
 
+  // const stats = addStats()
+
+  const ctrlObj = { rotationSpeed: 0.01, jumpSpeed: 0.01 }
+  const ctrl = new dat.GUI()
+  ctrl.add(ctrlObj, 'rotationSpeed', 0, 0.2, 0.01)
+  ctrl.add(ctrlObj, 'jumpSpeed', 0, 0.2, 0.01)
 
   // render.render(scene, camera)
-
-
-  for (let i = 0; i < planeGeometry.parameters.height / 5; i++) {
-    for (let j = 0; j < planeGeometry.parameters.width / 5; j++) {
-      const cubeGeo = new BoxGeometry(4, 4, 4)
-      const cubeMaterial = new MeshLambertMaterial()
-      cubeMaterial.color = new Color(0, Math.random() * 0.25 + 0.5, 0)
-      const cube = new Mesh(cubeGeo, cubeMaterial)
-      cube.position.x = -(planeGeometry.parameters.width / 2) + 15 + (i * 5)
-      cube.position.y = 2
-      cube.position.z = -(planeGeometry.parameters.height / 2) + 5 + (j * 5)
-      scene.add(cube)
-    }
-
-  }
-
-  const geometry = new BoxGeometry(8, 8, 8)
-  const material = new MeshLambertMaterial({ color: 0xff2288 })
-  const cube = new Mesh(geometry, material)
-  cube.position.x = 0
-  cube.position.y = 8
-  cube.position.z = 0
-
-  scene.add(cube)
+  renderScene()
 
 
   useEffect(() => {
@@ -86,13 +90,21 @@ export default function Camera() {
 
   })
 
-  var pos = 0
+  var gap = 0
   function renderScene() {
-    pos += 0.01
-    if (cube && camera) {
-      cube.position.x = 10 + (100 * (Math.sin(pos)))
-      camera.lookAt(cube.position)
-    }
+    // cube.rotation.x += 0.01
+    // cube.rotation.y += 0.01
+    // cube.rotation.z += 0.01
+
+    cube.rotation.x += ctrlObj.rotationSpeed
+    cube.rotation.y += ctrlObj.rotationSpeed
+    cube.rotation.z += ctrlObj.rotationSpeed
+
+    // gap += 0.01
+    gap += ctrlObj.jumpSpeed
+    cube.position.x = 25 + (20 * (Math.sin(gap)))
+    cube.position.y = 6 + (20 * Math.abs(Math.cos(gap)))
+    // stats.update()
     requestAnimationFrame(renderScene)
     render.render(scene, camera)
   }
@@ -108,8 +120,6 @@ export default function Camera() {
 
   //   return stats
   // }
-
-  renderScene()
 
   return (
     <div id="stage">
